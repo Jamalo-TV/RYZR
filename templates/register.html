@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Form</title>
+    <style>
+		body {
+			background-color: #1A244D;
+			color: #FFF;
+			font-family: Arial, sans-serif;
+		}
+
+		h1 {
+			color: #FFCC57;
+			text-align: center;
+		}
+
+		form {
+			max-width: 600px;
+			margin: 0 auto;
+			padding: 20px;
+			background-color: #ff6060;
+			box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+			border-radius: 5px;
+		}
+
+		label {
+			display: block;
+			margin-bottom: 10px;
+			font-size: 1.2rem;
+		}
+
+		input[type="email"],
+		input[type="text"],
+		input[type="password"] {
+			display: block;
+			width: 80%;
+			padding: 10px;
+			border-radius: 5px;
+			border: none;
+			margin-bottom: 20px;
+			font-size: 1.2rem;
+		}
+
+		input[type="submit"] {
+			background-color: #FFCC57;
+			color: #1A244D;
+			border: none;
+			padding: 10px 20px;
+			border-radius: 5px;
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+		}
+
+		input[type="submit"]:hover {
+			background-color: #E8B025;
+		}
+    </style>
+
+    <script>
+
+    function validateForm(event) {
+            const email = document.getElementById("email");
+            const username = document.getElementById("username");
+            const password = document.getElementById("password");
+
+            // Reset custom validation messages
+            email.setCustomValidity("");
+            username.setCustomValidity("");
+            password.setCustomValidity("");
+
+            if (!email.validity.valid) {
+                email.setCustomValidity("Please enter a valid email.");
+            }
+
+            if (!username.validity.valid) {
+                username.setCustomValidity("Username must be 3-30 characters long and contain only alphanumeric characters and underscores.");
+            }
+
+            if (!password.validity.valid) {
+                password.setCustomValidity("Password does not meet requirements.");
+            }
+        }
+
+async function submitForm(event) {
+    event.preventDefault();
+    const email = document.getElementById("email").value;
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    const response = await fetch("/input", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email: email, username: username, password: password })
+    });
+
+    const data = await response.json();
+
+    // Check if generated_key is defined and not empty
+    if (data.generated_key && data.generated_key !== "") {
+        // Set the generated_key value as a secure, HttpOnly, and SameSite cookie called session_key
+        const expiresInDays = 30;
+        const expirationDate = new Date();
+        expirationDate.setDate(expirationDate.getDate() + expiresInDays);
+        document.cookie = `session_key=${data.generated_key}; expires=${expirationDate.toUTCString()}; path=/; Secure; HttpOnly; SameSite=Lax`;
+    }
+
+    alert("User information received:\n" + JSON.stringify(data, null, 2));
+}
+
+
+    </script>
+</head>
+    <h1>Register</h1>
+    <form onsubmit="submitForm(event)">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"><br><br>
+
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required pattern="^[\w]{3,30}$"><br><br>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required pattern="^.{8,}$"><br><br>
+
+        <input type="submit" value="Sign Up" onclick="validateForm(event)">
+    </form>
+</body>
+</html>
