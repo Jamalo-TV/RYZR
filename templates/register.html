@@ -58,33 +58,40 @@
 
     <script>
 
-    function validateForm(event) {
-            const email = document.getElementById("email");
-            const username = document.getElementById("username");
-            const password = document.getElementById("password");
+function validateForm(event) {
+    event.preventDefault(); // Prevent form from submitting before validation
 
-            // Reset custom validation messages
-            email.setCustomValidity("");
-            username.setCustomValidity("");
-            password.setCustomValidity("");
+    const email = document.getElementById("email");
+    const validate_password = document.getElementById("validate_password");
+    const password = document.getElementById("password");
 
-            if (!email.validity.valid) {
-                email.setCustomValidity("Please enter a valid email.");
-            }
+    // Reset custom validation messages
+    email.setCustomValidity("");
+    validate_password.setCustomValidity("");
+    password.setCustomValidity("");
 
-            if (!username.validity.valid) {
-                username.setCustomValidity("Username must be 3-30 characters long and contain only alphanumeric characters and underscores.");
-            }
+    if (!email.validity.valid) {
+        email.setCustomValidity("Please enter a valid email.");
+    }
 
-            if (!password.validity.valid) {
-                password.setCustomValidity("Password does not meet requirements.");
-            }
-        }
+    if (validate_password.value !== password.value) {
+        validate_password.setCustomValidity("Passwords do not match.");
+    }
+
+    if (!password.validity.valid) {
+        password.setCustomValidity("Password does not meet requirements.");
+    }
+
+    if (email.validity.valid && validate_password.validity.valid && password.validity.valid) {
+        event.target.submit(); // If all fields are valid, submit the form
+    }
+}
+
 
 async function submitForm(event) {
     event.preventDefault();
     const email = document.getElementById("email").value;
-    const username = document.getElementById("username").value;
+    const validate_password = document.getElementById("validate_password").value;
     const password = document.getElementById("password").value;
 
     const response = await fetch("/input", {
@@ -92,7 +99,7 @@ async function submitForm(event) {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ email: email, username: username, password: password })
+        body: JSON.stringify({ email: email, validate_password: validate_password, password: password })
     });
 
     const data = await response.json();
@@ -109,6 +116,18 @@ async function submitForm(event) {
     alert("User information received:\n" + JSON.stringify(data, null, 2));
 }
 
+function myFunction() {
+      var x = document.getElementById("password");
+      var y = document.getElementById("validate_password");
+
+      if (x.type === "password") {
+        x.type = "text";
+        y.type = "text";
+      } else {
+        x.type = "password";
+        y.type = "password";
+      }
+    }
 
     </script>
 </head>
@@ -117,11 +136,13 @@ async function submitForm(event) {
         <label for="email">Email:</label>
         <input type="email" id="email" name="email" required pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"><br><br>
 
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required pattern="^[\w]{3,30}$"><br><br>
-
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required pattern="^.{8,}$"><br><br>
+
+        <label for="validate_password">Enter Password again:</label>
+        <input type="password" id="validate_password" name="validate_password" required pattern="^.{8,}$"><br><br>
+
+        <input type="checkbox" onclick="myFunction()">Show Passwords
 
         <input type="submit" value="Sign Up" onclick="validateForm(event)">
     </form>

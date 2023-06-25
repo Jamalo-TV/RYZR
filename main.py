@@ -1,9 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 import sqlite3
-from datetime import datetime
 import bcrypt
-import random
-import string
 import secrets
 import re
 from flask_talisman import Talisman
