@@ -59,7 +59,6 @@
     <script>
 
 function validateForm(event) {
-    event.preventDefault(); // Prevent form from submitting before validation
 
     const email = document.getElementById("email");
     const validate_password = document.getElementById("validate_password");
@@ -79,7 +78,7 @@ function validateForm(event) {
     }
 
     if (!password.validity.valid) {
-        password.setCustomValidity("Password does not meet requirements.");
+        password.setCustomValidity("Password must be 8 characters long.");
     }
 
     if (email.validity.valid && validate_password.validity.valid && password.validity.valid) {
