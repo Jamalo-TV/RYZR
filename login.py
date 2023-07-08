@@ -3,6 +3,10 @@ import sqlite3
 import bcrypt
 import re
 
+app = Flask(__name__)
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+
 def login_user(email, password):
     conn = sqlite3.connect('register_base_cookie.db')
     cursor = conn.cursor()
@@ -11,29 +15,32 @@ def login_user(email, password):
     result = cursor.fetchone()
 
     if result is None:
-        print("User with email {} not found.".format(email))
-        return False
+        return jsonify({"status": "fail", "message": "User with email {} not found.".format(email)}), 404
 
     hashed_password, salt = result
 
     if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
-        print("Successfully logged in!")
-        return True
+        return jsonify({"status": "success", "message": "Successfully logged in"}), 200
     else:
-        print("Incorrect password.")
-        return False
-
+        return jsonify({"status": "fail", "message": "Incorrect password."}), 401
 
 def validate_email(email):
     pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w+$')
     return pattern.match(email) is not None  # Return True if the email matches the pattern, else return False
 
-email = input("Enter your email: ")
-password = input("Enter your password: ")
+@app.route('/')
+def index():
+    return render_template('login.html')
 
-if validate_email(email):  # Call the function and check the result
-    print("Email valid")
-    login_user(email, password)
+@app.route('/input', methods=['POST'])
+def input_data():
+    email = request.json['email']
+    password = request.json['password']
 
-else:
-    print("Email not valid")
+    if validate_email(email):  # Call the function and check the result
+        return login_user(email, password)
+    else:
+        return jsonify({"status": "fail", "message": "Invalid email"}), 400
+
+if __name__ == '__main__':
+    app.run(debug=True)
