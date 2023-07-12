@@ -13,6 +13,8 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
+app.secret_key = secrets.token_hex(24)
+
 
 # generate session Key
 
@@ -61,7 +63,7 @@ def register_user(password):
 
 # Input validation
 def validate_email(email):
-    pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w+$')
+    pattern = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
     return pattern.match(email)
 
 
@@ -86,12 +88,12 @@ def compare_password(password, validate_password):
 def index():
     return render_template('register.html')
 
-
 @app.route('/input', methods=['POST'])
 def input_data():
-    email = request.json['email']
-    repeated_password = request.json['validate_password']
-    password = request.json['password']
+    data = request.get_json()
+    email = data['email']
+    repeated_password = data['validate_password']
+    password = data['password']
 
     if not validate_email(email):
         return jsonify(error="Invalid email format.")
@@ -110,22 +112,17 @@ def input_data():
 
     generated_key = key_generator()
 
-    validation_for_user = "registered successfully!"
-
+    validation_for_user = "Registered successfully!"
     found_email = "You already have an account."
 
     cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
     result = cursor.fetchone()
     if result:
-        print("Email has been found in the database")
-
         return jsonify(found_email=found_email)
-
     else:
-            insert_user(email, hashed_password.decode('utf-8'), salt.decode('utf-8'), generated_key)
-            print("User registered successfully!")
-
-            return jsonify(validation_for_user=validation_for_user, generated_key=generated_key)
+        insert_user(email, hashed_password.decode('utf-8'), salt.decode('utf-8'), generated_key)
+        session['key'] = generated_key
+        return jsonify(validation_for_user=validation_for_user)
 
     conn.close()
 

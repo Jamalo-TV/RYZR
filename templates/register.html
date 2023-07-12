@@ -88,83 +88,84 @@
 
     <script>
 
-function validateForm(event) {
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById('signupButton').addEventListener('click', function(event) {
+        event.preventDefault();
 
-    const email = document.getElementById("email");
-    const validate_password = document.getElementById("validate_password");
-    const password = document.getElementById("password");
+        const email = document.getElementById("email");
+        const validate_password = document.getElementById("validate_password");
+        const password = document.getElementById("password");
 
-    // Reset custom validation messages
-    email.setCustomValidity("");
-    validate_password.setCustomValidity("");
-    password.setCustomValidity("");
+        // Reset custom validation messages
+        email.setCustomValidity("");
+        validate_password.setCustomValidity("");
+        password.setCustomValidity("");
 
-    if (!email.validity.valid) {
-        email.setCustomValidity("Please enter a valid email.");
-    }
+        if (!email.validity.valid) {
+            email.setCustomValidity("Please enter a valid email.");
+        }
 
-    if (validate_password.value !== password.value) {
-        validate_password.setCustomValidity("Passwords do not match.");
-    }
+        if (validate_password.value !== password.value) {
+            validate_password.setCustomValidity("Passwords do not match.");
+        }
 
-    if (!password.validity.valid) {
-        password.setCustomValidity("Password must be 8 characters long.");
-    }
+        if (!password.validity.valid) {
+            password.setCustomValidity("Password must be 8 characters long.");
+        }
 
-    if (email.validity.valid && validate_password.validity.valid && password.validity.valid) {
-        event.target.submit(); // If all fields are valid, submit the form
-    }
-}
-
-
-async function submitForm(event) {
-    event.preventDefault();
-    const email = document.getElementById("email").value;
-    const validate_password = document.getElementById("validate_password").value;
-    const password = document.getElementById("password").value;
-
-    const response = await fetch("/input", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email: email, validate_password: validate_password, password: password })
+        if (email.validity.valid && validate_password.validity.valid && password.validity.valid) {
+            fetch('/input', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email.value,
+                    password: password.value,
+                    validate_password: validate_password.value
+                })
+            }).then(response => response.json())
+            .then(data => {
+                const messageElement = document.getElementById('message');
+                // Check if there's an error message
+                if (data.error) {
+                    messageElement.textContent = data.error;
+                }
+                // Check if there's a validation message
+                else if (data.validation_for_user) {
+                    messageElement.textContent = data.validation_for_user;
+                }
+                // Check if there's a 'found_email' message
+                else if (data.found_email) {
+                    messageElement.textContent = data.found_email;
+                }
+            });
+        }
     });
-
-    const data = await response.json();
-
-    // Check if generated_key is defined and not empty
-    if (data.generated_key && data.generated_key !== "") {
-        // Set the generated_key value as a secure, HttpOnly, and SameSite cookie called session_key
-        const expiresInDays = 30;
-        const expirationDate = new Date();
-        expirationDate.setDate(expirationDate.getDate() + expiresInDays);
-        document.cookie = `session_key=${data.generated_key}; expires=${expirationDate.toUTCString()}; path=/; Secure; HttpOnly; SameSite=Lax`;
-    }
-
-    alert("User information received:\n" + JSON.stringify(data, null, 2));
-}
+});
 
 function showPassword() {
-      var x = document.getElementById("password");
-      var y = document.getElementById("validate_password");
+    let x = document.getElementById("password");
+    let y = document.getElementById("validate_password");
 
-      if (x.type === "password") {
+    if (x.type === "password") {
         x.type = "text";
         y.type = "text";
-      } else {
+    } else {
         x.type = "password";
         y.type = "password";
-      }
     }
+}
+
 
     </script>
 </head>
 <body>
     <h1>Register</h1>
-    <form onsubmit="submitForm(event)">
+    <form onsubmit="event.preventDefault(); validateForm(event);">
         <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"><br><br>
+        <input type="email" id="email" name="email" required pattern="[^@]+@[^@]+\.[a-zA-Z]{2,}">
+
 
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required pattern="^.{8,}$"><br><br>
@@ -176,7 +177,11 @@ function showPassword() {
 
         <h6 class="login-txt">Already have an account? Click here.</h6>
 
-        <input type="submit" value="Sign Up" onclick="validateForm(event)">
+        <input id="signupButton" type="submit" value="Sign Up">
+
+        <div id="message"></div>
+
+
     </form>
 </body>
 </html>
